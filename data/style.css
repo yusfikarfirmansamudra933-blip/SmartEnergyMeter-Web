@@ -693,3 +693,19 @@ border-radius:8px;
     display: block;
     margin-top: 15px;
 }
+.project-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.project-card h3,
+.project-card p,
+.project-card strong {
+    color: inherit;
+}
+
+.project-card:hover {
+    text-decoration: none;
+}
