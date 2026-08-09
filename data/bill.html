@@ -1,55 +1,17 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
 
     <title>Tagihan Listrik Bulanan</title>
 
     <link rel="stylesheet" href="style.css">
 
-    <style>
-        .rate-setting {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .rate-setting input {
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-            width: 220px;
-        }
-
-        .rate-setting button {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .rate-message {
-            margin-top: 10px;
-            font-weight: bold;
-        }
-
-        .chartCard canvas {
-            width: 100% !important;
-            max-height: 450px;
-        }
-
-        .statusItem {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(128,128,128,.2);
-        }
-    </style>
 </head>
 
 <body>
@@ -58,22 +20,37 @@
 
     <!-- HEADER -->
     <header>
+
         <div>
+
             <h1>TAGIHAN LISTRIK</h1>
+
             <p>Diagram Tagihan Listrik Perbulan</p>
+
         </div>
 
         <div class="clockArea">
-            <span id="clock">00:00:00</span>
+
+            <span id="clock">
+                00:00:00
+            </span>
+
         </div>
+
     </header>
 
 
     <!-- KEMBALI -->
     <section class="setting">
-        <button id="backButton" type="button">
+
+        <button
+            type="button"
+            onclick="window.location.href='index.html'">
+
             ← Kembali ke Dashboard
+
         </button>
+
     </section>
 
 
@@ -81,69 +58,69 @@
     <section class="cards">
 
         <div class="card">
+
             <h3>Pemakaian Bulan Ini</h3>
 
             <h2 id="monthlyEnergy">
-                0
+                0.000
             </h2>
 
             <p>kWh</p>
+
         </div>
 
 
         <div class="card">
+
             <h3>Estimasi Tagihan</h3>
 
             <h2 id="monthlyBill">
-                Rp 0
+                Rp0
             </h2>
 
             <p>Bulan Ini</p>
+
         </div>
 
 
         <div class="card">
+
             <h3>Tarif Listrik</h3>
 
             <h2 id="electricityRate">
-                Rp 1.500
+                Rp1.500
             </h2>
 
             <p>per kWh</p>
+
         </div>
 
     </section>
 
 
     <!-- ATUR TARIF -->
-   <section class="setting">
+    <section class="setting">
 
-    <h2>Atur Tarif Listrik</h2>
-
-    <div class="rate-setting">
+        <h2>Atur Tarif Listrik</h2>
 
         <input
             id="rateInput"
             type="number"
             min="1"
             step="1"
-            placeholder="Contoh: 1500"
-        >
+            placeholder="Contoh: 1500">
 
         <button
             id="saveRateButton"
             type="button">
+
             Simpan Tarif
+
         </button>
 
-    </div>
+        <p id="rateMessage"></p>
 
-    <div
-        id="rateMessage"
-        class="rate-message">
-    </div>
-
-</section>
+    </section>
 
 
     <!-- DIAGRAM -->
@@ -152,6 +129,10 @@
         <h2>
             Diagram Tagihan Listrik Perbulan
         </h2>
+
+        <p>
+            Data diagram diperbarui setiap 5 menit.
+        </p>
 
         <canvas id="monthlyBillChart"></canvas>
 
@@ -165,33 +146,39 @@
             Riwayat Tagihan
         </h2>
 
-        <div id="history">
-            <p>Belum ada riwayat tagihan.</p>
-        </div>
+        <div id="history"></div>
 
     </section>
 
 </div>
 
 
-<!-- =====================================================
-     LIBRARY
-===================================================== -->
+<!-- ======================================================
+     CHART.JS
+====================================================== -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<!-- ======================================================
+     MQTT
+====================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.4/dist/mqtt.min.js"></script>
 
 
 <script>
-'use strict';
 
-/* ========================================================
-   KONFIGURASI MQTT
-======================================================== */
+"use strict";
+
+
+/* =========================================================
+   MQTT
+========================================================= */
 
 const MQTT_HOST =
     "wss://l660c516.ala.eu-central-1.emqxsl.com:8084/mqtt";
+
 
 const MQTT_OPTIONS = {
 
@@ -207,101 +194,104 @@ const MQTT_OPTIONS = {
 
 };
 
+
 const TOPIC_DATA =
     "smartmeter/data";
 
 
-/* ========================================================
-   ELEMENT
-======================================================== */
-
-const monthlyEnergyEl =
-    document.getElementById("monthlyEnergy");
-
-const monthlyBillEl =
-    document.getElementById("monthlyBill");
-
-const electricityRateEl =
-    document.getElementById("electricityRate");
-
-const rateInput =
-    document.getElementById("rateInput");
-
-const saveRateButton =
-    document.getElementById("saveRateButton");
-
-const rateMessage =
-    document.getElementById("rateMessage");
-
-const historyEl =
-    document.getElementById("history");
-
-const clockEl =
-    document.getElementById("clock");
-
-const backButton =
-    document.getElementById("backButton");
-
-const chartCanvas =
-    document.getElementById("monthlyBillChart");
+let mqttClient = null;
 
 
-/* ========================================================
-   TARIF LISTRIK
-======================================================== */
+/* =========================================================
+   TARIF
+========================================================= */
+
+const DEFAULT_RATE = 1500;
+
+
+/*
+    Tarif hanya dibaca sekali ketika halaman dibuka.
+*/
 
 let electricityRate =
     Number(
-        localStorage.getItem("electricityRate")
+        localStorage.getItem(
+            "electricityRate"
+        )
     );
 
 
-// Jika belum ada tarif
 if (
     !Number.isFinite(electricityRate) ||
     electricityRate <= 0
 ) {
 
-    electricityRate = 1500;
+    electricityRate =
+        DEFAULT_RATE;
 
     localStorage.setItem(
         "electricityRate",
-        String(electricityRate)
+        electricityRate
     );
+
 }
 
 
-/* ========================================================
+/* =========================================================
    DATA BULANAN
-======================================================== */
+========================================================= */
 
-let monthlyData = {};
+let monthlyData =
+    JSON.parse(
+        localStorage.getItem(
+            "monthlyElectricity"
+        )
+    ) || {};
 
-try {
 
-    monthlyData =
-        JSON.parse(
-            localStorage.getItem(
-                "monthlyElectricity"
-            )
-        ) || {};
+/* =========================================================
+   ELEMENT
+========================================================= */
 
-}
-catch(error) {
-
-    console.error(
-        "Data bulanan rusak:",
-        error
+const monthlyEnergyEl =
+    document.getElementById(
+        "monthlyEnergy"
     );
 
-    monthlyData = {};
 
-}
+const monthlyBillEl =
+    document.getElementById(
+        "monthlyBill"
+    );
 
 
-/* ========================================================
-   NAMA BULAN
-======================================================== */
+const electricityRateEl =
+    document.getElementById(
+        "electricityRate"
+    );
+
+
+const rateInput =
+    document.getElementById(
+        "rateInput"
+    );
+
+
+const saveRateButton =
+    document.getElementById(
+        "saveRateButton"
+    );
+
+
+const rateMessage =
+    document.getElementById(
+        "rateMessage"
+    );
+
+
+/* =========================================================
+   BULAN
+========================================================= */
 
 const monthNames = [
 
@@ -321,11 +311,12 @@ const monthNames = [
 ];
 
 
-/* ========================================================
+/* =========================================================
    FORMAT RUPIAH
-======================================================== */
+========================================================= */
 
-function formatRupiah(value) {
+function formatRupiah(value)
+{
 
     return new Intl.NumberFormat(
         "id-ID",
@@ -334,20 +325,20 @@ function formatRupiah(value) {
             currency: "IDR",
             maximumFractionDigits: 0
         }
-    ).format(
-        Number(value) || 0
-    );
+    ).format(value);
 
 }
 
 
-/* ========================================================
+/* =========================================================
    BULAN SEKARANG
-======================================================== */
+========================================================= */
 
-function getCurrentMonthKey() {
+function getCurrentMonthKey()
+{
 
-    const now = new Date();
+    const now =
+        new Date();
 
     return (
         now.getFullYear() +
@@ -360,19 +351,22 @@ function getCurrentMonthKey() {
 }
 
 
-/* ========================================================
-   UPDATE INFORMASI BULAN INI
-======================================================== */
+/* =========================================================
+   UPDATE INFORMASI
+========================================================= */
 
-function updateCurrentBill() {
+function updateCurrentBill()
+{
 
     const key =
         getCurrentMonthKey();
+
 
     const energy =
         Number(
             monthlyData[key] || 0
         );
+
 
     const bill =
         energy *
@@ -384,7 +378,9 @@ function updateCurrentBill() {
 
 
     monthlyBillEl.textContent =
-        formatRupiah(bill);
+        formatRupiah(
+            bill
+        );
 
 
     electricityRateEl.textContent =
@@ -392,38 +388,20 @@ function updateCurrentBill() {
             electricityRate
         );
 
-
-    rateInput.value =
-        electricityRate;
-
 }
 
 
-/* ========================================================
-   PESAN TARIF
-======================================================== */
-
-function showRateMessage(
-    message,
-    success = true
-) {
-
-    rateMessage.textContent =
-        message;
-
-    rateMessage.style.color =
-        success
-            ? "#10B981"
-            : "#EF4444";
-
-}
-
-
-/* ========================================================
+/* =========================================================
    SIMPAN TARIF
-======================================================== */
+========================================================= */
 
-function saveRate() {
+function saveRate()
+{
+
+    /*
+        Ambil nilai DARI INPUT.
+        Tidak mengambil kembali nilai lama.
+    */
 
     const value =
         Number(
@@ -431,157 +409,108 @@ function saveRate() {
         );
 
 
-    // Validasi
     if (
         !Number.isFinite(value) ||
         value <= 0
     ) {
 
-        showRateMessage(
-            "Tarif harus lebih dari 0.",
-            false
-        );
+        rateMessage.textContent =
+            "Tarif tidak valid.";
+
+        rateMessage.style.color =
+            "#EF4444";
 
         return;
 
     }
 
 
-    if (value > 100000) {
+    /*
+        Simpan tarif baru.
+    */
 
-        showRateMessage(
-            "Tarif terlalu besar.",
-            false
-        );
-
-        return;
-
-    }
-
-
-    // Simpan ke variabel
     electricityRate =
         value;
 
 
-    // Simpan ke browser
     localStorage.setItem(
         "electricityRate",
-        String(electricityRate)
+        String(
+            electricityRate
+        )
     );
 
 
-    // Update tampilan
+    /*
+        Update tampilan.
+    */
+
+    electricityRateEl.textContent =
+        formatRupiah(
+            electricityRate
+        );
+
+
     updateCurrentBill();
 
 
-    // Update diagram
-    createChart();
+    /*
+        Update diagram SEKALI
+        setelah tarif disimpan.
+    */
+
+    updateChart();
 
 
-    // Update riwayat
     showHistory();
 
 
-    showRateMessage(
+    rateMessage.textContent =
         "Tarif berhasil disimpan: " +
         formatRupiah(
             electricityRate
-        ) +
-        " / kWh",
-        true
-    );
+        );
+
+
+    rateMessage.style.color =
+        "#10B981";
 
 
     console.log(
-        "Tarif listrik:",
+        "TARIF DISIMPAN:",
         electricityRate
     );
 
 }
 
 
-/* ========================================================
-   EVENT TOMBOL TARIF
-======================================================== */
+/* =========================================================
+   TOMBOL TARIF
+========================================================= */
 
-if (saveRateButton) {
-
-    saveRateButton.addEventListener(
-        "click",
-        saveRate
-    );
-
-}
+saveRateButton.addEventListener(
+    "click",
+    saveRate
+);
 
 
-/* ========================================================
-   ENTER PADA INPUT
-======================================================== */
-
-if (rateInput) {
-
-    rateInput.addEventListener(
-        "keydown",
-        function(event) {
-
-            if (
-                event.key === "Enter"
-            ) {
-
-                saveRate();
-
-            }
-
-        }
-    );
-
-}
-
-
-/* ========================================================
-   TOMBOL KEMBALI
-======================================================== */
-
-if (backButton) {
-
-    backButton.addEventListener(
-        "click",
-        function() {
-
-            window.location.href =
-                "index.html";
-
-        }
-    );
-
-}
-
-
-/* ========================================================
+/* =========================================================
    CHART
-======================================================== */
+========================================================= */
 
 let billChart = null;
 
 
-function createChart() {
+/* =========================================================
+   MEMBUAT DATA CHART
+========================================================= */
 
-    if (!chartCanvas) {
-
-        console.error(
-            "Canvas diagram tidak ditemukan."
-        );
-
-        return;
-
-    }
-
+function getChartData()
+{
 
     const labels = [];
 
     const values = [];
-
 
     const currentYear =
         new Date().getFullYear();
@@ -624,28 +553,50 @@ function createChart() {
     }
 
 
-    // Hapus chart lama
-    if (billChart) {
+    return {
+        labels,
+        values
+    };
 
-        billChart.destroy();
+}
 
-        billChart = null;
 
-    }
+/* =========================================================
+   BUAT CHART
+========================================================= */
+
+function createChart()
+{
+
+    const canvas =
+        document.getElementById(
+            "monthlyBillChart"
+        );
+
+
+    if (!canvas)
+        return;
+
+
+    const chartData =
+        getChartData();
 
 
     billChart =
         new Chart(
-            chartCanvas,
+            canvas,
             {
 
                 type: "bar",
 
-                data: {
+                data:
+                {
 
-                    labels: labels,
+                    labels:
+                        chartData.labels,
 
-                    datasets: [
+                    datasets:
+                    [
 
                         {
 
@@ -653,7 +604,7 @@ function createChart() {
                                 "Tagihan Listrik",
 
                             data:
-                                values,
+                                chartData.values,
 
                             borderWidth: 1
 
@@ -663,24 +614,31 @@ function createChart() {
 
                 },
 
-                options: {
+
+                options:
+                {
 
                     responsive: true,
 
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
 
                     animation: false,
 
-                    scales: {
 
-                        y: {
+                    scales:
+                    {
+
+                        y:
+                        {
 
                             beginAtZero: true,
 
-                            ticks: {
+                            ticks:
+                            {
 
                                 callback:
-                                function(value) {
+                                function(value)
+                                {
 
                                     return formatRupiah(
                                         value
@@ -694,14 +652,19 @@ function createChart() {
 
                     },
 
-                    plugins: {
 
-                        tooltip: {
+                    plugins:
+                    {
 
-                            callbacks: {
+                        tooltip:
+                        {
+
+                            callbacks:
+                            {
 
                                 label:
-                                function(context) {
+                                function(context)
+                                {
 
                                     return formatRupiah(
                                         context.raw
@@ -723,24 +686,75 @@ function createChart() {
 }
 
 
-/* ========================================================
-   RIWAYAT
-======================================================== */
+/* =========================================================
+   UPDATE CHART
 
-function showHistory() {
+   PENTING:
+   Chart TIDAK dihancurkan dan dibuat ulang.
 
-    if (!historyEl)
+   Hanya data yang diganti.
+
+========================================================= */
+
+function updateChart()
+{
+
+    if (!billChart)
         return;
 
 
-    historyEl.innerHTML = "";
+    const chartData =
+        getChartData();
+
+
+    billChart.data.labels =
+        chartData.labels;
+
+
+    billChart.data.datasets[0].data =
+        chartData.values;
+
+
+    /*
+        Update tanpa animasi.
+        Ini mencegah diagram berkedip.
+    */
+
+    billChart.update(
+        "none"
+    );
+
+
+    console.log(
+        "DIAGRAM DIPERBARUI:",
+        new Date().toLocaleTimeString()
+    );
+
+}
+
+
+/* =========================================================
+   RIWAYAT
+========================================================= */
+
+function showHistory()
+{
+
+    const history =
+        document.getElementById(
+            "history"
+        );
+
+
+    if (!history)
+        return;
+
+
+    history.innerHTML = "";
 
 
     const currentYear =
         new Date().getFullYear();
-
-
-    let totalItems = 0;
 
 
     for (
@@ -763,18 +777,13 @@ function showHistory() {
             );
 
 
-        if (
-            energy <= 0
-        ) {
-
-            continue;
-
-        }
-
-
         const bill =
             energy *
             electricityRate;
+
+
+        if (energy <= 0)
+            continue;
 
 
         const item =
@@ -787,50 +796,32 @@ function showHistory() {
             "statusItem";
 
 
-        const monthName =
-            document.createElement(
-                "strong"
-            );
+        item.innerHTML =
+            "<strong>" +
+            monthNames[month] +
+            "</strong>" +
 
-        monthName.textContent =
-            monthNames[month];
-
-
-        const value =
-            document.createElement(
-                "span"
-            );
-
-        value.textContent =
+            "<span>" +
             energy.toFixed(3) +
             " kWh — " +
-            formatRupiah(bill);
+            formatRupiah(
+                bill
+            ) +
+            "</span>";
 
 
-        item.appendChild(
-            monthName
-        );
-
-        item.appendChild(
-            value
-        );
-
-
-        historyEl.appendChild(
+        history.appendChild(
             item
         );
-
-
-        totalItems++;
 
     }
 
 
     if (
-        totalItems === 0
+        history.innerHTML === ""
     ) {
 
-        historyEl.innerHTML =
+        history.innerHTML =
             "<p>Belum ada riwayat tagihan.</p>";
 
     }
@@ -838,24 +829,21 @@ function showHistory() {
 }
 
 
-/* ========================================================
-   SIMPAN ENERGI MQTT
-======================================================== */
+/* =========================================================
+   SIMPAN ENERGI DARI MQTT
+========================================================= */
 
 function saveEnergyFromMQTT(
     energy
-) {
-
-    energy =
-        Number(energy);
-
+)
+{
 
     if (
         !Number.isFinite(energy)
     ) {
 
         console.error(
-            "Energy MQTT tidak valid:",
+            "Energi MQTT tidak valid:",
             energy
         );
 
@@ -868,29 +856,21 @@ function saveEnergyFromMQTT(
         getCurrentMonthKey();
 
 
-    let startData = {};
+    /*
+        Data energi awal bulan.
+    */
 
-    try {
-
-        startData =
-            JSON.parse(
-                localStorage.getItem(
-                    "monthlyEnergyStart"
-                )
-            ) || {};
-
-    }
-    catch(error) {
-
-        startData = {};
-
-    }
+    let startData =
+        JSON.parse(
+            localStorage.getItem(
+                "monthlyEnergyStart"
+            )
+        ) || {};
 
 
     /*
-       Jika bulan ini belum mempunyai
-       energi awal, simpan energi PZEM
-       sebagai titik awal.
+        Jika belum ada titik awal,
+        simpan energi PZEM saat ini.
     */
 
     if (
@@ -923,8 +903,7 @@ function saveEnergyFromMQTT(
 
 
     /*
-       Jika PZEM reset,
-       jangan menghasilkan nilai negatif.
+        Jika PZEM di-reset.
     */
 
     if (
@@ -960,44 +939,59 @@ function saveEnergyFromMQTT(
     );
 
 
+    console.log(
+        "ENERGI BULANAN:",
+        key,
+        usedEnergy,
+        "kWh"
+    );
+
+
     /*
-       Update angka saja.
-       Chart TIDAK dibuat ulang
-       setiap MQTT message.
+        Update kartu dan riwayat.
     */
 
     updateCurrentBill();
 
     showHistory();
 
+
+    /*
+        JANGAN updateChart() di sini.
+
+        Karena MQTT bisa mengirim data
+        setiap detik.
+
+        Diagram akan diperbarui
+        oleh timer 5 menit.
+    */
+
 }
 
 
-/* ========================================================
-   MQTT
-======================================================== */
+/* =========================================================
+   MQTT CONNECT
+========================================================= */
 
-let mqttClient = null;
+function connectMQTT()
+{
 
+    console.log(
+        "=== BILL MQTT START ==="
+    );
 
-function connectMQTT() {
 
     if (
         typeof mqtt === "undefined"
     ) {
 
         console.error(
-            "Library MQTT tidak ditemukan."
+            "MQTT.js tidak ditemukan."
         );
 
         return;
 
     }
-
-
-    console.log(
-        "=== BILL MQTT START ==="
-    );
 
 
     mqttClient =
@@ -1009,7 +1003,8 @@ function connectMQTT() {
 
     mqttClient.on(
         "connect",
-        function() {
+        function()
+        {
 
             console.log(
                 "=== BILL MQTT CONNECTED ==="
@@ -1018,7 +1013,8 @@ function connectMQTT() {
 
             mqttClient.subscribe(
                 TOPIC_DATA,
-                function(error) {
+                function(error)
+                {
 
                     if (error) {
 
@@ -1027,15 +1023,15 @@ function connectMQTT() {
                             error
                         );
 
-                    }
-                    else {
-
-                        console.log(
-                            "MQTT SUBSCRIBED:",
-                            TOPIC_DATA
-                        );
+                        return;
 
                     }
+
+
+                    console.log(
+                        "SUBSCRIBED:",
+                        TOPIC_DATA
+                    );
 
                 }
             );
@@ -1049,7 +1045,8 @@ function connectMQTT() {
         function(
             topic,
             message
-        ) {
+        )
+        {
 
             try {
 
@@ -1059,18 +1056,27 @@ function connectMQTT() {
                     );
 
 
+                console.log(
+                    "BILL MQTT DATA:",
+                    data
+                );
+
+
                 if (
                     data.energy !== undefined
                 ) {
 
                     saveEnergyFromMQTT(
-                        data.energy
+                        Number(
+                            data.energy
+                        )
                     );
 
                 }
 
             }
-            catch(error) {
+            catch(error)
+            {
 
                 console.error(
                     "MQTT JSON ERROR:",
@@ -1085,7 +1091,8 @@ function connectMQTT() {
 
     mqttClient.on(
         "error",
-        function(error) {
+        function(error)
+        {
 
             console.error(
                 "BILL MQTT ERROR:",
@@ -1098,7 +1105,8 @@ function connectMQTT() {
 
     mqttClient.on(
         "reconnect",
-        function() {
+        function()
+        {
 
             console.log(
                 "BILL MQTT RECONNECTING..."
@@ -1110,7 +1118,8 @@ function connectMQTT() {
 
     mqttClient.on(
         "close",
-        function() {
+        function()
+        {
 
             console.log(
                 "BILL MQTT CLOSED"
@@ -1122,17 +1131,24 @@ function connectMQTT() {
 }
 
 
-/* ========================================================
+/* =========================================================
    JAM
-======================================================== */
+========================================================= */
 
-function updateClock() {
+function updateClock()
+{
 
-    if (!clockEl)
+    const clock =
+        document.getElementById(
+            "clock"
+        );
+
+
+    if (!clock)
         return;
 
 
-    clockEl.textContent =
+    clock.textContent =
         new Date()
             .toLocaleTimeString(
                 "id-ID"
@@ -1141,24 +1157,107 @@ function updateClock() {
 }
 
 
-/* ========================================================
+/* =========================================================
+   UPDATE DIAGRAM SETIAP 5 MENIT
+========================================================= */
+
+/*
+    5 menit = 300.000 ms
+
+    Chart TIDAK diperbarui setiap detik.
+
+    MQTT tetap berjalan normal.
+
+    Yang diperbarui setiap 5 menit
+    hanya diagram.
+*/
+
+const CHART_UPDATE_INTERVAL =
+    5 * 60 * 1000;
+
+
+setInterval(
+    function()
+    {
+
+        console.log(
+            "=== 5 MENIT ==="
+        );
+
+
+        /*
+            Baca ulang localStorage
+            supaya data terbaru masuk
+            ke diagram.
+        */
+
+        monthlyData =
+            JSON.parse(
+                localStorage.getItem(
+                    "monthlyElectricity"
+                )
+            ) || {};
+
+
+        /*
+            Tarif juga dibaca ulang
+            hanya saat interval chart.
+        */
+
+        const storedRate =
+            Number(
+                localStorage.getItem(
+                    "electricityRate"
+                )
+            );
+
+
+        if (
+            Number.isFinite(
+                storedRate
+            ) &&
+            storedRate > 0
+        ) {
+
+            electricityRate =
+                storedRate;
+
+        }
+
+
+        updateChart();
+
+        updateCurrentBill();
+
+        showHistory();
+
+    },
+    CHART_UPDATE_INTERVAL
+);
+
+
+/* =========================================================
    START
-======================================================== */
+========================================================= */
 
 window.addEventListener(
     "load",
-    function() {
+    function()
+    {
 
-        console.log(
-            "=== BILL PAGE START ==="
-        );
+        /*
+            Isi input SATU KALI.
+        */
+
+        rateInput.value =
+            electricityRate;
 
 
         updateCurrentBill();
 
-        createChart();
-
         showHistory();
+
+        createChart();
 
         updateClock();
 
@@ -1168,6 +1267,13 @@ window.addEventListener(
 );
 
 
+/* =========================================================
+   JAM SETIAP DETIK
+
+   Ini HANYA untuk jam.
+   Bukan untuk diagram.
+========================================================= */
+
 setInterval(
     updateClock,
     1000
@@ -1176,4 +1282,5 @@ setInterval(
 </script>
 
 </body>
+
 </html>
