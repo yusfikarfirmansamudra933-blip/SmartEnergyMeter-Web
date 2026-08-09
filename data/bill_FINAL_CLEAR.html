@@ -51,7 +51,7 @@
 
         <!-- INPUT INI SENGAJA TIDAK MEMILIKI value -->
         <input
-            id="rateInput"
+            id="tariffInputFinal"
             type="number"
             min="1"
             step="1"
@@ -59,7 +59,7 @@
             autocomplete="off"
         >
 
-        <button type="button" id="saveRateButton">
+        <button type="button" id="saveTariffFinal">
             Simpan Tarif
         </button>
 
@@ -113,8 +113,8 @@ const monthlyEnergyEl = document.getElementById("monthlyEnergy");
 const monthlyBillEl = document.getElementById("monthlyBill");
 const electricityRateEl = document.getElementById("electricityRate");
 
-const rateInput = document.getElementById("rateInput");
-const saveRateButton = document.getElementById("saveRateButton");
+const tariffInput = document.getElementById("tariffInputFinal");
+const saveTariffButton = document.getElementById("saveTariffFinal");
 const rateMessage = document.getElementById("rateMessage");
 
 const historyEl = document.getElementById("history");
@@ -199,7 +199,7 @@ function formatRupiah(value) {
 /* =========================================================
    UPDATE CARD
    PENTING:
-   Fungsi ini TIDAK MENYENTUH rateInput.
+   Fungsi ini TIDAK MENYENTUH tariffInput.
 ========================================================= */
 
 function updateCards() {
@@ -217,8 +217,8 @@ function updateCards() {
    Hanya berjalan ketika tombol diklik.
 ========================================================= */
 
-saveRateButton.addEventListener("click", function () {
-    const raw = rateInput.value.trim();
+saveTariffButton.addEventListener("click", function () {
+    const raw = tariffInput.value.trim();
     const value = Number(raw);
 
     if (!raw || !Number.isFinite(value) || value <= 0) {
@@ -237,7 +237,7 @@ saveRateButton.addEventListener("click", function () {
     updateCards();
 
     /* Hanya setelah berhasil disimpan, input dikosongkan. */
-    rateInput.value = "";
+    tariffInput.value = "";
 
     rateMessage.textContent = "Tarif berhasil disimpan.";
     rateMessage.style.color = "#10B981";
@@ -562,13 +562,13 @@ window.addEventListener("load", function () {
 
     /*
        Tampilkan tarif hanya di CARD.
-       Tidak pernah mengisi rateInput.
+       Tidak pernah mengisi tariffInput.
     */
     updateCards();
 
     /*
        Input dibiarkan kosong.
-       Tidak ada rateInput.value = electricityRate.
+       Tidak ada tariffInput.value = electricityRate.
     */
 
     createChart();
