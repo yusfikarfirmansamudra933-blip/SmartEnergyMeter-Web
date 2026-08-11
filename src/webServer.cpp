@@ -1,5 +1,5 @@
 #include "webServer.h"
-
+#include "telegram.h"
 #include <Arduino.h>
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
@@ -242,6 +242,79 @@ void registerStaticFiles()
 }
 
 //====================================================
+// TELEGRAM TEST
+//====================================================
+
+void registerTelegramTest()
+{
+    server.on("/api/telegram-test", HTTP_GET,
+    [](AsyncWebServerRequest *request)
+    {
+        Serial.println("Telegram test requested from web");
+
+        if (WiFi.status() != WL_CONNECTED)
+        {
+            request->send(
+                503,
+                "application/json",
+                "{\"success\":false,\"message\":\"WiFi tidak terhubung\"}"
+            );
+
+            return;
+        }
+
+        String message;
+
+        message += "🤖 SMART ENERGY METER\n\n";
+        message += "✅ TES KONEKSI TELEGRAM BERHASIL\n\n";
+
+        message += "ESP32 berhasil terhubung ke Telegram.\n\n";
+
+        message += "Daya sekarang : ";
+        message += String(power, 1);
+        message += " W\n";
+
+        message += "Batas daya    : ";
+        message += String(powerLimit, 1);
+        message += " W\n";
+
+        message += "Tegangan      : ";
+        message += String(voltage, 1);
+        message += " V\n";
+
+        message += "Arus          : ";
+        message += String(current, 2);
+        message += " A\n";
+
+        message += "Frekuensi     : ";
+        message += String(frequency, 2);
+        message += " Hz\n";
+
+        message += "Power Factor  : ";
+        message += String(pf, 2);
+
+        bool success =
+            sendTelegramMessage(message);
+
+        if (success)
+        {
+            request->send(
+                200,
+                "application/json",
+                "{\"success\":true,\"message\":\"Pesan Telegram berhasil dikirim\"}"
+            );
+        }
+        else
+        {
+            request->send(
+                500,
+                "application/json",
+                "{\"success\":false,\"message\":\"Gagal mengirim pesan Telegram\"}"
+            );
+        }
+    });
+}
+//====================================================
 // START SERVER
 //====================================================
 
@@ -263,6 +336,7 @@ void webServerBegin()
     registerRestart();
     registerFactoryReset();
     registerLogin();
+    registerTelegramTest();
 
     server.onNotFound([](AsyncWebServerRequest *request)
     {

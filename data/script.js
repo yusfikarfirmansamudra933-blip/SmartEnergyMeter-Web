@@ -1035,3 +1035,129 @@ function updateConnection(){
     }
 
 }
+//==========================================================
+// TEST TELEGRAM
+//==========================================================
+
+async function testTelegram()
+{
+    const button =
+        document.getElementById(
+            "telegramTestBtn"
+        );
+
+    const status =
+        document.getElementById(
+            "telegramStatus"
+        );
+
+
+    if (!button || !status)
+        return;
+
+
+    // ================================
+    // LOADING
+    // ================================
+
+    button.disabled = true;
+
+    button.innerHTML =
+        "⏳ Mengirim...";
+
+    status.innerHTML =
+        "Menghubungi Telegram...";
+
+    status.style.color =
+        "#F59E0B";
+
+
+    try
+    {
+        const response =
+            await fetch(
+                "/api/telegram-test"
+            );
+
+
+        const result =
+            await response.json();
+
+
+        // ================================
+        // BERHASIL
+        // ================================
+
+        if(
+            response.ok &&
+            result.success
+        )
+        {
+            status.innerHTML =
+                "✅ Telegram terhubung";
+
+            status.style.color =
+                "#10B981";
+
+
+            showToast(
+                "✅ Pesan Telegram berhasil dikirim"
+            );
+        }
+
+
+        // ================================
+        // GAGAL
+        // ================================
+
+        else
+        {
+            status.innerHTML =
+                "❌ Telegram gagal";
+
+            status.style.color =
+                "#EF4444";
+
+
+            showToast(
+                "❌ " +
+                (
+                    result.message ||
+                    "Gagal mengirim Telegram"
+                ),
+                false
+            );
+        }
+
+    }
+    catch(error)
+    {
+        console.error(
+            "Telegram Test Error:",
+            error
+        );
+
+
+        status.innerHTML =
+            "❌ ESP32 tidak dapat dihubungi";
+
+        status.style.color =
+            "#EF4444";
+
+
+        showToast(
+            "❌ Tidak dapat menghubungi ESP32",
+            false
+        );
+    }
+
+
+    // ================================
+    // KEMBALIKAN BUTTON
+    // ================================
+
+    button.disabled = false;
+
+    button.innerHTML =
+        "📱 Tes Koneksi Telegram";
+}
