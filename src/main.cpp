@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include "telegram.h"
 #include "config.h"
 #include "globals.h"
 #include "PowerLimit.h"
@@ -23,7 +22,7 @@ void setup()
     storageBegin();
 
     oledBegin();
-    telegramBegin();
+   
 
     pzemBegin();
     wifiBegin();

@@ -1068,10 +1068,14 @@ body.popup-open {
 
     }
 
-}
-.telegramStatus {
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    text-align: center;
+    .week-bill h3 {
+
+        font-size: 15px;
+
+    }
+    .week-bill strong {
+
+        font-size: 15px;
+
+    }
 }
