@@ -4,7 +4,7 @@
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
-
+#include <WiFi.h>
 #include "globals.h"
 #include "storage.h"
 #include "wifiManager.h"
