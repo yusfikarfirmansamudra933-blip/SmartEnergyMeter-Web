@@ -1,47 +1,68 @@
-const CACHE_NAME = "SmartEnergyMeter-v1";
+const CACHE_NAME = "SmartEnergyMeter-v2";
 
 const urls = [
-
-"/",
-
-"/index.html",
-
-"/style.css",
-
-"/script.js",
-
-"/manifest.json"
-
+    "/SmartEnergyMeter-Web/",
+    "/SmartEnergyMeter-Web/index.html",
+    "/SmartEnergyMeter-Web/style.css",
+    "/SmartEnergyMeter-Web/script.js",
+    "/SmartEnergyMeter-Web/manifest.json",
+    "/SmartEnergyMeter-Web/icon-192.png",
+    "/SmartEnergyMeter-Web/icon-512.png"
 ];
 
-self.addEventListener("install",event=>{
+self.addEventListener("install", event => {
 
-event.waitUntil(
+    event.waitUntil(
 
-caches.open(CACHE_NAME)
+        caches.open(CACHE_NAME)
+            .then(cache => {
 
-.then(cache=>{
+                return cache.addAll(urls);
 
-return cache.addAll(urls);
+            })
 
-})
+    );
 
-);
+    self.skipWaiting();
 
 });
 
-self.addEventListener("fetch",event=>{
 
-event.respondWith(
+self.addEventListener("activate", event => {
 
-caches.match(event.request)
+    event.waitUntil(
 
-.then(response=>{
+        caches.keys()
+            .then(keys => {
 
-return response || fetch(event.request);
+                return Promise.all(
 
-})
+                    keys
+                        .filter(key => key !== CACHE_NAME)
+                        .map(key => caches.delete(key))
 
-);
+                );
+
+            })
+
+    );
+
+    self.clients.claim();
+
+});
+
+
+self.addEventListener("fetch", event => {
+
+    event.respondWith(
+
+        caches.match(event.request)
+            .then(response => {
+
+                return response || fetch(event.request);
+
+            })
+
+    );
 
 });
