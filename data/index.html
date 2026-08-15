@@ -28,6 +28,9 @@
             <h1>SMART ENERGY METER</h1>
 
             <p>Industrial IoT Monitoring</p>
+            <button id="installBtn" style="display:none;">
+            📲 INSTALL APP
+        </button>
 
         </div>
 
@@ -362,6 +365,64 @@ if ('serviceWorker' in navigator) {
     });
 
 }
+
+</script>
+<!-- PWA INSTALL -->
+<script>
+
+let deferredPrompt;
+
+const installBtn = document.getElementById("installBtn");
+
+window.addEventListener("beforeinstallprompt", (event) => {
+
+    // Mencegah browser menampilkan prompt otomatis
+    event.preventDefault();
+
+    // Simpan event untuk digunakan saat tombol ditekan
+    deferredPrompt = event;
+
+    // Tampilkan tombol install
+    installBtn.style.display = "inline-block";
+
+});
+
+
+installBtn.addEventListener("click", async () => {
+
+    if (!deferredPrompt) {
+        return;
+    }
+
+    // Tampilkan dialog instalasi
+    deferredPrompt.prompt();
+
+    // Tunggu pilihan pengguna
+    const { outcome } = await deferredPrompt.userChoice;
+
+    console.log(
+        "Hasil instalasi:",
+        outcome
+    );
+
+    // Event hanya bisa digunakan sekali
+    deferredPrompt = null;
+
+    // Sembunyikan tombol
+    installBtn.style.display = "none";
+
+});
+
+
+window.addEventListener("appinstalled", () => {
+
+    console.log(
+        "Smart Energy Meter berhasil di-install"
+    );
+
+    installBtn.style.display = "none";
+
+});
 
 </script>
 <!-- TAGIHAN LISTRIK -->
