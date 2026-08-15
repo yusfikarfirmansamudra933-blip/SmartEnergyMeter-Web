@@ -1,22 +1,22 @@
 {
-    "name":"Smart Energy Meter",
-    "short_name":"Energy Meter",
-    "start_url":"/",
-    "display":"standalone",
-    "background_color":"#0b1220",
-    "theme_color":"#0b1220",
-    "orientation":"portrait",
-    "scope":"/",
-    "icons":[
+    "name": "Smart Energy Meter",
+    "short_name": "Energy Meter",
+    "start_url": "/SmartEnergyMeter-Web/",
+    "display": "standalone",
+    "background_color": "#0b1220",
+    "theme_color": "#0b1220",
+    "orientation": "portrait",
+    "scope": "/SmartEnergyMeter-Web/",
+    "icons": [
         {
-            "src":"icon-192.png",
-            "sizes":"192x192",
-            "type":"image/png"
+            "src": "/SmartEnergyMeter-Web/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
         },
         {
-            "src":"icon-512.png",
-            "sizes":"512x512",
-            "type":"image/png"
+            "src": "/SmartEnergyMeter-Web/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
         }
     ]
 }
