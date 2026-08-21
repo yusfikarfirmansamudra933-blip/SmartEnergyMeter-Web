@@ -1,6 +1,7 @@
 #include "webServer.h"
 
 #include <Arduino.h>
+#include <cstring>
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
@@ -218,8 +219,8 @@ void registerLogin()
         String username = doc["username"];
         String password = doc["password"];
 
-        if(username=="admin" &&
-           password=="admin123")
+        if (strlen(WEB_USERNAME) > 0 && strlen(WEB_PASSWORD) > 0 &&
+            username == WEB_USERNAME && password == WEB_PASSWORD)
         {
             request->send(200,"text/plain","OK");
         }

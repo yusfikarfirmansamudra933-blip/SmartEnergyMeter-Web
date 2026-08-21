@@ -31,29 +31,7 @@ const pzemStatus = document.getElementById("pzemStatus");
 
 const limitInput = document.getElementById("limitInput");
 
-const MQTT_HOST =
-"wss://l660c516.ala.eu-central-1.emqxsl.com:8084/mqtt";
-
-const MQTT_OPTIONS = {
-
-    username: "smartenergymeter",
-
-    password: "12345678",
-
-    reconnectPeriod: 2000,
-
-    connectTimeout: 10000,
-
-    clean: true
-
-};
-const TOPIC_DATA = "smartmeter/data";
-const TOPIC_LIMIT = "smartmeter/cmd/limit";
-
-const TOPIC_RESTART = "smartmeter/cmd/restart";
-const TOPIC_RESET = "smartmeter/cmd/reset";
-
-let client;
+let socket;
 
 //==========================================================
 // LIVE DATA
@@ -322,7 +300,7 @@ percentEl.innerHTML=
 percent.toFixed(0)+"%";
 
 }
-function connectMQTT(){
+function connectLegacyMQTT(){
 
     console.log("=== MQTT START ===");
     console.log("Broker:", MQTT_HOST);
@@ -340,8 +318,8 @@ function connectMQTT(){
 
     client = mqtt.connect(MQTT_HOST, {
 
-        username: "smartenergymeter",
-        password: "12345678",
+        username: "",
+        password: "",
 
         clientId:
             "SmartEnergyWeb_" +
@@ -621,6 +599,42 @@ function saveMonthlyEnergy()
         "kWh"
     );
 }
+function connectWebSocket(){
+
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING))
+        return;
+
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+    socket.onopen = () => {
+        wifiText.textContent = "ONLINE";
+        refreshStatus();
+    };
+
+    socket.onmessage = (event) => {
+        try {
+            meter = JSON.parse(event.data);
+            saveMonthlyEnergy();
+            connectionState.lastPacket = Date.now();
+            updateDashboard();
+            updateGauge(meter.power);
+        } catch (error) {
+            console.error("Status data is invalid:", error);
+        }
+    };
+
+    socket.onerror = () => {
+        wifiText.textContent = "CONNECTION ERROR";
+    };
+
+    socket.onclose = () => {
+        wifiText.textContent = "OFFLINE";
+        socket = null;
+        window.setTimeout(connectWebSocket, 3000);
+    };
+}
+
 function updateDashboard(){
 
     animateNumber(voltageEl, meter.voltage, 1);
@@ -778,7 +792,7 @@ window.addEventListener("load",()=>{
 
     createChart();
 
-    connectMQTT();
+    connectWebSocket();
 
 });
 /*==========================================================
@@ -871,17 +885,13 @@ function saveLimit()
         return;
     }
 
-    if (!client || !client.connected)
-    {
-        showToast("MQTT belum terhubung", false);
-        return;
-    }
-
-    client.publish(TOPIC_LIMIT, value.toString());
-
-    showToast("Limit dikirim");
-
-    console.log("Publish Limit :", value);
+    fetch(`/setLimit?value=${encodeURIComponent(value)}`)
+        .then(response => {
+            if (!response.ok) throw new Error("Limit could not be saved");
+            showToast("Limit disimpan");
+            return refreshStatus();
+        })
+        .catch(() => showToast("Gagal menyimpan limit", false));
 }
 
 //==========================================================
@@ -890,20 +900,12 @@ function saveLimit()
 
 function restartESP()
 {
-    if (!client || !client.connected)
-    {
-        showToast("MQTT belum terhubung", false);
-        return;
-    }
-
     if (!confirm("Restart ESP32 ?"))
         return;
 
-    client.publish(TOPIC_RESTART, "1");
-
-    showToast("Perintah restart dikirim");
-
-    console.log("MQTT → Restart ESP32");
+    fetch("/restart")
+        .then(() => showToast("Perintah restart dikirim"))
+        .catch(() => showToast("Gagal mengirim perintah restart", false));
 }
 
 //==========================================================
@@ -912,20 +914,13 @@ function restartESP()
 
 function factoryReset()
 {
-    if (!client || !client.connected)
-    {
-        showToast("MQTT belum terhubung", false);
-        return;
-    }
-
     if (!confirm("Factory Reset ?"))
         return;
 
-    client.publish(TOPIC_RESET, "1");
-
-    showToast("Perintah Factory Reset dikirim");
-
-    console.log("MQTT → Factory Reset");
+    fetch("/factoryReset")
+        .then(() => showToast("Factory reset selesai"))
+        .then(refreshStatus)
+        .catch(() => showToast("Gagal melakukan factory reset", false));
 }
 
 //==========================================================

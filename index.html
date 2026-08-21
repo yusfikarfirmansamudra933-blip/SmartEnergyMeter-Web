@@ -256,7 +256,7 @@
 
     <button
         id="reconnect"
-        onclick="connectMQTT()">
+        onclick="connectWebSocket()">
 
         RECONNECT
 
@@ -329,7 +329,6 @@
 
 
 <!-- MQTT.JS -->
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 
 <!-- SCRIPT UTAMA -->
@@ -344,7 +343,7 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
 
         navigator.serviceWorker.register(
-            '/SmartEnergyMeter-Web/service-worker.js'
+            'service-worker.js'
         )
         .then(function () {
 
@@ -427,7 +426,7 @@ window.addEventListener("appinstalled", () => {
 </script>
 <!-- TAGIHAN LISTRIK -->
 
-<a href="https://yusfikarfirmansamudra933-blip.github.io/SmartEnergyMeter-Web/data/bill.html"
+<a href="bill.html"
    class="project-card">
 
     <h3>

@@ -150,7 +150,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- MQTT -->
-<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.4/dist/mqtt.min.js"></script>
 
 <script>
 
@@ -158,25 +157,37 @@
 // KONFIGURASI MQTT
 // ==========================================================
 
-const MQTT_HOST =
-    "wss://l660c516.ala.eu-central-1.emqxsl.com:8084/mqtt";
-
-const MQTT_OPTIONS = {
-
-    username: "smartenergymeter",
-
-    password: "12345678",
-
-    reconnectPeriod: 3000,
-
-    connectTimeout: 10000,
-
-    clean: true
-
-};
-
 const TOPIC_DATA =
     "smartmeter/data";
+const MQTT_HOST = "";
+const MQTT_OPTIONS = {};
+
+const mqtt = {
+    connect() {
+        const handlers = {};
+        const client = {
+            on(event, handler) { handlers[event] = handler; },
+            subscribe(_topic, callback) { if (callback) callback(null); }
+        };
+
+        window.setTimeout(() => {
+            if (handlers.connect) handlers.connect();
+        }, 0);
+
+        window.setInterval(async () => {
+            try {
+                const response = await fetch("/api/status");
+                if (!response.ok) throw new Error("Status request failed");
+                const status = await response.json();
+                if (handlers.message) handlers.message(TOPIC_DATA, JSON.stringify(status));
+            } catch (error) {
+                if (handlers.error) handlers.error(error);
+            }
+        }, 1000);
+
+        return client;
+    }
+};
 
 
 // ==========================================================
