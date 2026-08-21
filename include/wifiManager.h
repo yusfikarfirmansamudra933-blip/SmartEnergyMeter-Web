@@ -15,4 +15,12 @@ int wifiRSSI();
 
 String wifiSSID();
 
+bool wifiProvisioning();
+
+String wifiSetupNetwork();
+
+String wifiSetupPassword();
+
+void resetWiFiCredentials();
+
 #endif

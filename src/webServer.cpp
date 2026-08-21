@@ -186,9 +186,10 @@ void registerFactoryReset()
     {
         resetConfig();
 
-        notifyClients();
-
-        request->send(200,"text/plain","Factory Reset");
+        resetWiFiCredentials();
+        request->send(200,"text/plain","Factory reset complete. Restarting...");
+        delay(300);
+        ESP.restart();
     });
 }
 
@@ -248,6 +249,12 @@ void registerStaticFiles()
 
 void webServerBegin()
 {
+    if (wifiProvisioning())
+    {
+        Serial.println("Web dashboard waits until Wi-Fi setup is complete");
+        return;
+    }
+
     if(!LittleFS.begin(true))
     {
         Serial.println("LittleFS Mount Failed");
@@ -282,6 +289,9 @@ void webServerBegin()
 
 void webServerLoop()
 {
+    if (wifiProvisioning())
+        return;
+
     ws.cleanupClients();
 
     static unsigned long lastUpdate = 0;

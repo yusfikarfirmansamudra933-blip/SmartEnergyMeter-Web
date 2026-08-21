@@ -3,9 +3,6 @@
 // Copy this file to config.local.h and fill in your own credentials.
 // config.local.h is ignored by Git and must never be committed.
 
-#define WIFI_SSID "your-wifi-name"
-#define WIFI_PASSWORD "your-wifi-password"
-
 #define MQTT_HOST "broker.example.com"
 #define MQTT_PORT 8883
 #define MQTT_USERNAME "smartenergymeter"

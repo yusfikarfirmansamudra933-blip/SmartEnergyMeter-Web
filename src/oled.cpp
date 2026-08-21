@@ -158,6 +158,19 @@ display.print(WiFi.localIP());
 void oledLoop()
 {
 
+if (wifiProvisioning())
+{
+display.clearDisplay();
+drawHeader("WiFi Setup");
+display.setCursor(0,12);
+display.print(wifiSetupNetwork());
+display.setCursor(0,23);
+display.print("Key: ");
+display.print(wifiSetupPassword());
+display.display();
+return;
+}
+
 if(
 millis()-pageMillis>3000)
 {
