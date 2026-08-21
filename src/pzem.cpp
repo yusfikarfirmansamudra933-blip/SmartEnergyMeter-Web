@@ -8,7 +8,7 @@
 
 HardwareSerial PZEMSerial(2);
 
-PZEM004Tv30 pzem(PZEMSerial, RXD2, TXD2);
+PZEM004Tv30 pzem(PZEMSerial, PZEM_RX, PZEM_TX);
 
 //======================================================
 
@@ -17,8 +17,8 @@ void pzemBegin()
     PZEMSerial.begin(
         9600,
         SERIAL_8N1,
-        RXD2,
-        TXD2
+        PZEM_RX,
+        PZEM_TX
     );
 }
 
@@ -37,13 +37,15 @@ void readPZEM()
     // Validasi Sensor
     // -----------------------------
 
-    if(isnan(v))
+    if (isnan(v) || isnan(i) || isnan(p) || isnan(e) || isnan(f) || isnan(pfValue))
     {
         sensorOnline = false;
+        pzemErrorCount++;
         return;
     }
 
     sensorOnline = true;
+    pzemReadCount++;
 
     voltage = v;
     current = i;
@@ -52,39 +54,17 @@ void readPZEM()
     frequency = f;
     pf = pfValue;
 
-    // -----------------------------
-    // Hitung Apparent Power (VA)
-    // -----------------------------
-
-    apparentPower = voltage * current;
-
-    // -----------------------------
-    // Hitung Reactive Power (VAR)
-    // -----------------------------
-
-    float s = apparentPower * apparentPower;
-    float w = power * power;
-
-    float q = s - w;
-
-    if(q < 0)
-        q = 0;
-
-    reactivePower = sqrt(q);
-
-    // -----------------------------
-    // Filter nilai aneh
-    // -----------------------------
-
-    if(voltage < 0) voltage = 0;
-    if(current < 0) current = 0;
-    if(power < 0) power = 0;
-    if(energy < 0) energy = 0;
-    if(frequency < 0) frequency = 0;
-    if(pf < 0) pf = 0;
+    voltage = max(voltage, 0.0f);
+    current = max(current, 0.0f);
+    power = max(power, 0.0f);
+    energy = max(energy, 0.0f);
+    frequency = max(frequency, 0.0f);
+    pf = max(pf, 0.0f);
 
     // PF maksimum 1.0
-    if(pf > 1)
-        pf = 1;
+    pf = min(pf, 1.0f);
+
+    apparentPower = voltage * current;
+    reactivePower = sqrt(max(0.0f, apparentPower * apparentPower - power * power));
 
 }

@@ -1,13 +1,14 @@
 #include "wifiManager.h"
 
 #include <WiFi.h>
+#include <cstring>
 
 #include "config.h"
 
-const char *ssid = "sbr 11 bg yg bnci i bkan u doang";
-const char *password = "00000000";
-
+namespace {
+constexpr unsigned long RECONNECT_INTERVAL_MS = 5000;
 unsigned long reconnectMillis = 0;
+}
 
 void wifiBegin()
 {
@@ -15,21 +16,14 @@ void wifiBegin()
 
     WiFi.setAutoReconnect(true);
 
-    WiFi.begin(ssid,password);
-
-    Serial.print("Connecting");
-
-    while(WiFi.status()!=WL_CONNECTED)
+    if (strlen(WIFI_SSID) == 0)
     {
-        Serial.print(".");
-        delay(400);
+        Serial.println("WiFi credentials are not configured");
+        return;
     }
 
-    Serial.println();
-    Serial.println("Connected");
-
-    Serial.print("IP : ");
-    Serial.println(WiFi.localIP());
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    Serial.println("Connecting to WiFi");
 
 }
 
@@ -39,7 +33,7 @@ void wifiLoop()
     if(WiFi.status()==WL_CONNECTED)
         return;
 
-    if(millis()-reconnectMillis<5000)
+    if (strlen(WIFI_SSID) == 0 || millis() - reconnectMillis < RECONNECT_INTERVAL_MS)
         return;
 
     reconnectMillis=millis();
@@ -48,7 +42,7 @@ void wifiLoop()
 
     WiFi.disconnect();
 
-    WiFi.begin(ssid,password);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
 }
 

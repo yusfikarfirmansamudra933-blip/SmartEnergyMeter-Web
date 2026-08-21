@@ -1,7 +1,8 @@
-#ifndef CONFIG_H
-#define CONFIG_H
-#define RXD2 16
-#define TXD2 17
+#pragma once
+
+#if __has_include("config.local.h")
+#include "config.local.h"
+#endif
 
 /*==============================
         PROJECT
@@ -48,8 +49,42 @@
         WIFI
 ==============================*/
 
-#define AP_NAME "SmartEnergyMeter"
+#ifndef WIFI_SSID
+#define WIFI_SSID ""
+#endif
 
-#define AP_PASSWORD "12345678"
+#ifndef WIFI_PASSWORD
+#define WIFI_PASSWORD ""
+#endif
 
+#ifndef MQTT_HOST
+#define MQTT_HOST ""
+#endif
+
+#ifndef MQTT_PORT
+#define MQTT_PORT 8883
+#endif
+
+#ifndef MQTT_USERNAME
+#define MQTT_USERNAME ""
+#endif
+
+#ifndef MQTT_PASSWORD
+#define MQTT_PASSWORD ""
+#endif
+
+#ifndef MQTT_CA_CERT
+#define MQTT_CA_CERT ""
+#endif
+
+#ifndef MQTT_TLS_INSECURE
+#define MQTT_TLS_INSECURE false
+#endif
+
+#ifndef WEB_USERNAME
+#define WEB_USERNAME ""
+#endif
+
+#ifndef WEB_PASSWORD
+#define WEB_PASSWORD ""
 #endif

@@ -3,9 +3,11 @@
 
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include <cstring>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
+#include "config.h"
 #include "globals.h"
 
 //==========================================================
@@ -19,11 +21,8 @@ PubSubClient mqtt(espClient);
 // EMQX CLOUD
 //==========================================================
 
-const char* MQTT_HOST = "l660c516.ala.eu-central-1.emqxsl.com";
-const int MQTT_PORT = 8883;
-
-const char* MQTT_USER = "smartenergymeter";
-const char* MQTT_PASS = "12345678";
+unsigned long lastReconnectAttempt = 0;
+const unsigned long RECONNECT_INTERVAL_MS = 5000;
 
 //==========================================================
 // MQTT TOPIC
@@ -33,6 +32,8 @@ const char* TOPIC_DATA    = "smartmeter/data";
 const char* TOPIC_LIMIT   = "smartmeter/cmd/limit";
 const char* TOPIC_RESTART = "smartmeter/cmd/restart";
 const char* TOPIC_RESET   = "smartmeter/cmd/reset";
+const unsigned long PUBLISH_INTERVAL_MS = 1000;
+unsigned long lastPublish = 0;
 
 //==========================================================
 // MQTT CALLBACK
@@ -63,9 +64,7 @@ void callback(char* topic, byte* payload, unsigned int length)
 
         if (value >= 100 && value <= 10000)
         {
-            powerLimit = value;
-
-            saveConfig();
+            saveLimit(value);
 
             Serial.print("Limit Baru : ");
             Serial.println(powerLimit);
@@ -111,8 +110,16 @@ void callback(char* topic, byte* payload, unsigned int length)
 
 void mqttBegin()
 {
-    // Menggunakan TLS tanpa verifikasi sertifikat
-    espClient.setInsecure();
+    if (strlen(MQTT_HOST) == 0 || strlen(MQTT_USERNAME) == 0 || strlen(MQTT_PASSWORD) == 0)
+    {
+        Serial.println("MQTT credentials are not configured");
+        return;
+    }
+
+    if (MQTT_TLS_INSECURE)
+        espClient.setInsecure();
+    else
+        espClient.setCACert(MQTT_CA_CERT);
 
     mqtt.setServer(MQTT_HOST, MQTT_PORT);
 
@@ -127,34 +134,19 @@ void mqttBegin()
 
 void mqttReconnect()
 {
-    while (!mqtt.connected())
+    if (mqtt.connected() || strlen(MQTT_HOST) == 0 ||
+        strlen(MQTT_USERNAME) == 0 || strlen(MQTT_PASSWORD) == 0 ||
+        millis() - lastReconnectAttempt < RECONNECT_INTERVAL_MS)
     {
-        Serial.println("========================");
-        Serial.println("Connecting to MQTT...");
+        return;
+    }
 
-        if (mqtt.connect(
-            "ESP32SmartMeter",
-            MQTT_USER,
-            MQTT_PASS
-        ))
-        {
-            Serial.println("MQTT CONNECTED");
-
-            // Subscribe hanya ke command yang diperlukan
-            mqtt.subscribe(TOPIC_LIMIT);
-            mqtt.subscribe(TOPIC_RESTART);
-            mqtt.subscribe(TOPIC_RESET);
-
-            Serial.println("MQTT SUBSCRIBED");
-        }
-        else
-        {
-            Serial.print("FAILED");
-            Serial.print("  rc=");
-            Serial.println(mqtt.state());
-
-            delay(5000);
-        }
+    lastReconnectAttempt = millis();
+    if (mqtt.connect("ESP32SmartMeter", MQTT_USERNAME, MQTT_PASSWORD))
+    {
+        mqtt.subscribe(TOPIC_LIMIT);
+        mqtt.subscribe(TOPIC_RESTART);
+        mqtt.subscribe(TOPIC_RESET);
     }
 }
 
@@ -178,11 +170,12 @@ void mqttLoop()
 
 void mqttPublish()
 {
-    if (!mqtt.connected())
+    if (!mqtt.connected() || millis() - lastPublish < PUBLISH_INTERVAL_MS)
     {
-        Serial.println("MQTT NOT CONNECTED");
         return;
     }
+
+    lastPublish = millis();
 
     StaticJsonDocument<512> doc;
 

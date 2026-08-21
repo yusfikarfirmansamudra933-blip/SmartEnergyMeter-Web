@@ -1,13 +1,13 @@
-const CACHE_NAME = "SmartEnergyMeter-v2";
+const CACHE_NAME = "SmartEnergyMeter-v3";
 
 const urls = [
-    "/SmartEnergyMeter-Web/",
-    "/SmartEnergyMeter-Web/index.html",
-    "/SmartEnergyMeter-Web/style.css",
-    "/SmartEnergyMeter-Web/script.js",
-    "/SmartEnergyMeter-Web/manifest.json",
-    "/SmartEnergyMeter-Web/icon-192.png",
-    "/SmartEnergyMeter-Web/icon-512.png"
+    "./",
+    "./index.html",
+    "./style.css",
+    "./script.js",
+    "./manifest.json",
+    "./icon-192.png",
+    "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
